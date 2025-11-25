@@ -1,0 +1,5 @@
+Rendre le fichier exécutable
+chmod +x start.sh
+
+exécuter avec la commande suivante : 
+./start.sh

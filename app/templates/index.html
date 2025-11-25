@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AirFlow ETL</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Feuilles de style CSS -->
+    <link rel="stylesheet" href="/static/css/variables.css">
+    <link rel="stylesheet" href="/static/css/base.css">
+    <link rel="stylesheet" href="/static/css/layout.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/responsive.css">
+    
+    <!-- Chart.js avec version spécifique -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div>
+                <div class="logo">
+                    <i class="fas fa-database"></i>
+                    <div>
+                        <h1>AirFlow ETL - Employés</h1>
+                        <p class="subtitle">G6 - M1 - ISIE IBAM 2025</p>
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-primary btn-lg" onclick="triggerETL()">
+                    <i class="fas fa-play"></i> Lancer ETL
+                </button>
+            </div>
+        </header>
+        
+        <!-- Navigation Tabs -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('dashboard')">
+                <i class="fas fa-chart-line"></i> Tableau de bord
+            </button>
+            <button class="tab" onclick="switchTab('unified')">
+                <i class="fas fa-database"></i> Base unifiée
+            </button>
+            <button class="tab" onclick="switchTab('sources')">
+                <i class="fas fa-server"></i> Employés par source
+            </button>
+            <button class="tab" onclick="switchTab('test-etl')">
+                <i class="fas fa-flask"></i> Simuler ETL
+            </button>
+            <button class="tab" onclick="switchTab('api')">
+                <i class="fas fa-code"></i> API REST
+            </button>
+        </div>
+        
+        <!-- Tab: Tableau de bord -->
+        <div id="tab-dashboard" class="tab-content active">
+            <!-- Last Sync -->
+            <div class="last-sync" id="last-sync-info" style="display: none;">
+                <i class="fas fa-clock"></i>
+                <span id="last-sync-text">Dernière synchronisation : Jamais</span>
+            </div>
+            
+            <!-- KPI Cards -->
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div class="kpi-icon" style="background: linear-gradient(135deg, #667eea, #764ba2);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="total-employes">-</div>
+                    <div class="kpi-label">Total employés (base unifiée)</div>
+                </div>
+                
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div class="kpi-icon" style="background: #10b981;">
+                            <i class="fas fa-file-csv"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="count-csv">-</div>
+                    <div class="kpi-label">Employés CSV</div>
+                </div>
+                
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div class="kpi-icon" style="background: #3b82f6;">
+                            <i class="fas fa-database"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="count-mysql">-</div>
+                    <div class="kpi-label">Employés MySQL</div>
+                </div>
+                
+                <div class="kpi-card">
+                    <div class="kpi-header">
+                        <div class="kpi-icon" style="background: #f59e0b;">
+                            <i class="fas fa-elephant"></i>
+                        </div>
+                    </div>
+                    <div class="kpi-value" id="count-postgresql">-</div>
+                    <div class="kpi-label">Employés PostgreSQL</div>
+                </div>
+            </div>
+            
+            <!-- Charts -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-chart-pie"></i> Répartition par source
+                    </h2>
+                </div>
+                <div class="chart-container">
+                    <canvas id="sourceChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Liste des employés unifiés -->
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-database"></i> Employés de la base unifiée
+                    </h2>
+                    <button class="btn btn-secondary" onclick="loadUnifiedEmployees()">
+                        <i class="fas fa-refresh"></i> Actualiser
+                    </button>
+                </div>
+                
+                <div class="info-box" style="background: #f0fdf4; border-left-color: #10b981;">
+                    <h4 style="color: #166534;"><i class="fas fa-info-circle"></i> Base de données unifiée (READ ONLY)</h4>
+                    <p style="color: #166534;">Cette table contient tous les employés synchronisés depuis les trois sources (CSV, MySQL, PostgreSQL). Les données sont mises à  jour uniquement par le pipeline ETL. Pour modifier un employé, utilisez l'onglet "Employés par source".</p>
+                </div>
+                
+                <div id="unified-employees-list" class="loading">
+                    <div class="spinner"></div>
+                    Chargement...
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Base Unifiée -->
+        <div id="tab-unified" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-database"></i> Base de données unifiée
+                    </h2>
+                    <button class="btn btn-secondary" onclick="loadUnifiedData()">
+                        <i class="fas fa-refresh"></i> Actualiser
+                    </button>
+                </div>
+                
+                <div class="info-box" style="background: #f0fdf4; border-left-color: #10b981;">
+                    <h4 style="color: #166534;"><i class="fas fa-info-circle"></i> Base de données unifiée (READ ONLY)</h4>
+                    <p style="color: #166534;">
+                        Cette table contient tous les employés synchronisés depuis les trois sources (CSV, MySQL, PostgreSQL). 
+                        Les données sont mises à jour uniquement par le pipeline ETL. 
+                        Pour modifier un employé, utilisez l'onglet "Employés par source".
+                    </p>
+                </div>
+                
+                <div id="unified-data-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        Chargement...
+                    </div>
+                </div>
+                
+                <!-- Pagination Controls -->
+                <div class="pagination" id="unified-pagination-controls" style="display: none;">
+                    <button onclick="changeUnifiedPage('first')" id="unified-btn-first">
+                        <i class="fas fa-angle-double-left"></i> Premier
+                    </button>
+                    <button onclick="changeUnifiedPage('prev')" id="unified-btn-prev">
+                        <i class="fas fa-angle-left"></i> Précédent
+                    </button>
+                    <span id="unified-page-info" style="padding: 10px 20px; font-weight: 600;">Page 1 / 1</span>
+                    <button onclick="changeUnifiedPage('next')" id="unified-btn-next">
+                        Suivant <i class="fas fa-angle-right"></i>
+                    </button>
+                    <button onclick="changeUnifiedPage('last')" id="unified-btn-last">
+                        Dernier <i class="fas fa-angle-double-right"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Employés par Source -->
+        <div id="tab-sources" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-database"></i> Employés par source de données
+                    </h2>
+                    <button class="btn btn-secondary" onclick="loadSourcesData()">
+                        <i class="fas fa-refresh"></i> Actualiser
+                    </button>
+                </div>
+                
+                <div class="alert-box">
+                    <i class="fas fa-info-circle"></i>
+                    <div class="alert-box-content">
+                        <h4>Bases de données sources (READ/WRITE)</h4>
+                        <p>Ces données proviennent directement des bases sources. Vous pouvez <strong>modifier</strong> ou <strong>supprimer</strong> des employés ici. Pour synchroniser les changements vers la base unifiée, cliquez sur <strong>"Lancer ETL"</strong>.</p>
+                    </div>
+                </div>
+                
+                <!-- Source Selection Cards -->
+                <div class="source-stats-grid">
+                    <div class="source-stat-card" onclick="selectSource('csv')">
+                        <div class="source-stat-header">
+                            <div class="source-stat-icon" style="background: #10b981;">
+                                <i class="fas fa-file-csv"></i>
+                            </div>
+                            <div>
+                                <div class="source-stat-label">CSV (Fichier)</div>
+                            </div>
+                        </div>
+                        <div class="source-stat-value" id="src-count-csv">-</div>
+                        <p style="color: #6b7280; font-size: 0.85em; margin-top: 8px;">Lecture seule</p>
+                    </div>
+                    
+                    <div class="source-stat-card" onclick="selectSource('mysql')">
+                        <div class="source-stat-header">
+                            <div class="source-stat-icon" style="background: #3b82f6;">
+                                <i class="fas fa-database"></i>
+                            </div>
+                            <div>
+                                <div class="source-stat-label">MySQL Source</div>
+                            </div>
+                        </div>
+                        <div class="source-stat-value" id="src-count-mysql">-</div>
+                        <p style="color: #6b7280; font-size: 0.85em; margin-top: 8px;">Modifiable</p>
+                    </div>
+                    
+                    <div class="source-stat-card" onclick="selectSource('postgresql')">
+                        <div class="source-stat-header">
+                            <div class="source-stat-icon" style="background: #f59e0b;">
+                                <i class="fas fa-elephant"></i>
+                            </div>
+                            <div>
+                                <div class="source-stat-label">PostgreSQL Source</div>
+                            </div>
+                        </div>
+                        <div class="source-stat-value" id="src-count-postgresql">-</div>
+                        <p style="color: #6b7280; font-size: 0.85em; margin-top: 8px;">Modifiable</p>
+                    </div>
+                </div>
+                
+                <!-- Employee List -->
+                <div id="source-employees-list">
+                    <div class="message message-info">
+                        <i class="fas fa-info-circle"></i>
+                        Sélectionnez une source pour voir les employés
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab: Test ETL -->
+        <div id="tab-test-etl" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-flask"></i> Tester le Pipeline ETL Complet
+                    </h2>
+                </div>
+                
+                <div class="info-box">
+                    <h4><i class="fas fa-lightbulb"></i> Scénario de test du pipeline</h4>
+                    <p>Testez le flux ETL complet en 4 étapes :</p>
+                    <ol>
+                        <li><strong>Ajoutez un ou plusieurs employé(s)</strong> dans une base source (MySQL ou PostgreSQL) <br> ou ajouter des données dans le fichier csv (data/data.csv)</li>
+                        <li><strong>Cliquez sur "Lancer ETL"</strong> pour déclencher la synchronisation (15 secondes)</li>
+                        <li><strong>Observez le Tableau de bord</strong> : les compteurs s'incrémentent automatiquement</li>
+                        <li><strong>Vérifiez l'onglet "Base Unifiée"</strong> : le ou les nouvel(s) employé(s) apparaît(ront) dans la base unifiée</li>
+                    </ol>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px;">
+                    <!-- Formulaire MySQL -->
+                    <div style="background: #eff6ff; padding: 25px; border-radius: 15px; border: 2px solid #3b82f6;">
+                        <h3 style="color: #1e40af; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-database"></i> Ajouter dans MySQL Source
+                        </h3>
+                        <form id="mysqlForm" onsubmit="addToSource(event, 'mysql')">
+                            <div class="form-group">
+                                <label class="form-label">Nom complet *</label>
+                                <input type="text" class="form-input" id="mysql-nom" required placeholder="Ex: Abdoulaye Ouedraogo">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-input" id="mysql-email" required placeholder="Ex: abdoulaye@entreprise.bf">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Département *</label>
+                                <input type="text" class="form-input" id="mysql-departement" required placeholder="Ex: Informatique">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Salaire (FCFA) *</label>
+                                <input type="number" class="form-input" id="mysql-salaire" required min="0" step="1000" placeholder="Ex: 850000">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Date d'embauche</label>
+                                <input type="date" class="form-input" id="mysql-date">
+                            </div>
+                            <button type="submit" class="btn btn-info" style="width: 100%;">
+                                <i class="fas fa-plus"></i> Ajouter dans MySQL
+                            </button>
+                        </form>
+                        <div id="mysql-message" style="margin-top: 15px;"></div>
+                    </div>
+                    
+                    <!-- Formulaire PostgreSQL -->
+                    <div style="background: #fef3c7; padding: 25px; border-radius: 15px; border: 2px solid #f59e0b;">
+                        <h3 style="color: #92400e; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-elephant"></i> Ajouter dans PostgreSQL Source
+                        </h3>
+                        <form id="postgresqlForm" onsubmit="addToSource(event, 'postgresql')">
+                            <div class="form-group">
+                                <label class="form-label">Nom complet *</label>
+                                <input type="text" class="form-input" id="postgresql-nom" required placeholder="Ex: Fatoumata Traore">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Email *</label>
+                                <input type="email" class="form-input" id="postgresql-email" required placeholder="Ex: fatoumata@entreprise.bf">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Département *</label>
+                                <input type="text" class="form-input" id="postgresql-departement" required placeholder="Ex: Ressources Humaines">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Salaire (FCFA) *</label>
+                                <input type="number" class="form-input" id="postgresql-salaire" required min="0" step="1000" placeholder="Ex: 720000">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Date d'embauche</label>
+                                <input type="date" class="form-input" id="postgresql-date">
+                            </div>
+                            <button type="submit" class="btn btn-warning" style="width: 100%;">
+                                <i class="fas fa-plus"></i> Ajouter dans PostgreSQL
+                            </button>
+                        </form>
+                        <div id="postgresql-message" style="margin-top: 15px;"></div>
+                    </div>
+                </div>
+                
+                <!-- Bouton Lancer ETL -->
+                <div style="text-align: center; margin-top: 35px;">
+                    <button class="btn btn-primary btn-lg" onclick="triggerETL()" style="min-width: 300px;">
+                        <i class="fas fa-play"></i> Lancer ETL et Synchroniser
+                    </button>
+                    <p style="color: #6b7280; margin-top: 15px; font-size: 1.05em;">
+                        Le processus prend environ 15 secondes
+                    </p>
+                </div>
+                
+                <div id="etl-result" style="margin-top: 25px;"></div>
+            </div>
+        </div>
+        
+        <!-- Tab: API -->
+        <div id="tab-api" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">
+                        <i class="fas fa-code"></i> Documentation API REST
+                    </h2>
+                </div>
+                
+                <div class="info-box">
+                    <h4><i class="fas fa-info-circle"></i> Architecture API</h4>
+                    <p><strong>Base unifiée</strong> : Lecture seule (GET uniquement)<br>
+                    <strong>Bases sources</strong> : CRUD complet (GET, POST, PUT, DELETE)</p>
+                </div>
+                
+                <h3 style="margin: 25px 0 15px; color: var(--primary);">Base Unifiée (READ ONLY)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Méthode</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/employes</code></td>
+                            <td>Liste tous les employés de la base unifiée</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/employes/:id</code></td>
+                            <td>Détails d'un employé</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3 style="margin: 25px 0 15px; color: var(--primary);">MySQL Source (CRUD Complet)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Méthode</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/sources/mysql/employes</code></td>
+                            <td>Liste employés MySQL source</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/sources/mysql/employes/:id</code></td>
+                            <td>Détails d'un employé MySQL</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #f59e0b;">POST</span></td>
+                            <td><code>/api/sources/mysql/employes</code></td>
+                            <td>Ajouter un employé dans MySQL</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #3b82f6;">PUT</span></td>
+                            <td><code>/api/sources/mysql/employes/:id</code></td>
+                            <td>Modifier un employé MySQL</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #ef4444;">DELETE</span></td>
+                            <td><code>/api/sources/mysql/employes/:id</code></td>
+                            <td>Supprimer un employé MySQL</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3 style="margin: 25px 0 15px; color: var(--primary);">PostgreSQL Source (CRUD Complet)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Méthode</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/sources/postgresql/employes</code></td>
+                            <td>Liste employés PostgreSQL source</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/sources/postgresql/employes/:id</code></td>
+                            <td>Détails d'un employé PostgreSQL</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #f59e0b;">POST</span></td>
+                            <td><code>/api/sources/postgresql/employes</code></td>
+                            <td>Ajouter un employé dans PostgreSQL</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #3b82f6;">PUT</span></td>
+                            <td><code>/api/sources/postgresql/employes/:id</code></td>
+                            <td>Modifier un employé PostgreSQL</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #ef4444;">DELETE</span></td>
+                            <td><code>/api/sources/postgresql/employes/:id</code></td>
+                            <td>Supprimer un employé PostgreSQL</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3 style="margin: 25px 0 15px; color: var(--primary);">Statistiques</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Méthode</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/stats</code></td>
+                            <td>Statistiques globales de la base unifiée</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/sources/stats</code></td>
+                            <td>Statistiques des bases sources</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/stats/sources</code></td>
+                            <td>Répartition par source (base unifiée)</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3 style="margin: 25px 0 15px; color: var(--primary);">ETL</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Méthode</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="source-badge" style="background: #f59e0b;">POST</span></td>
+                            <td><code>/api/etl/trigger</code></td>
+                            <td>Déclencher le DAG Airflow manuellement</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/etl/status</code></td>
+                            <td>Statut actuel du DAG</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/etl/history</code></td>
+                            <td>Historique des exécutions</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal: Modifier Employé -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="editModalTitle">Modifier l'employé</h3>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <div id="edit-modal-message"></div>
+            <form id="editForm" onsubmit="saveEdit(event)">
+                <input type="hidden" id="edit-source">
+                <input type="hidden" id="edit-id">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Nom complet *</label>
+                        <input type="text" id="edit-nom" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email *</label>
+                        <input type="email" id="edit-email" class="form-input" required>
+                    </div>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Département *</label>
+                        <input type="text" id="edit-departement" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Salaire (FCFA) *</label>
+                        <input type="number" id="edit-salaire" class="form-input" required min="0" step="1000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Date d'embauche</label>
+                    <input type="date" id="edit-date" class="form-input">
+                </div>
+                <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 25px;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">
+                        <i class="fas fa-times"></i> Annuler
+                    </button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Enregistrer
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Bouton de toggle du mode sombre -->
+    <button class="theme-toggle" onclick="toggleDarkMode()" title="Basculer mode sombre/clair">
+        <i class="fas fa-moon"></i>
+    </button>
+    
+    <!-- Scripts JavaScript -->
+    <script src="/static/js/config.js"></script>
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/ui.js"></script>
+    <script src="/static/js/charts.js"></script>
+    <script src="/static/js/etl.js"></script>
+    <script src="/static/js/employees.js"></script>
+    <script src="/static/js/main.js"></script>
+</body>
+</html>
