@@ -29,10 +29,11 @@ class ETLManager {
      */
     async loadStats() {
         try {
-            // ✅ CORRECTION : Charger UNIQUEMENT depuis la BASE UNIFIÉE (après ETL)
-            const [stats, sourcesData] = await Promise.all([
+            // Charger depuis la BASE UNIFIÉE (après ETL)
+            const [stats, sourcesStats, sourcesData] = await Promise.all([
                 api.getStats(),           // Total unifié
-                api.getStatsPerSource()   // Comptes par source DEPUIS la base unifiée
+                api.getSourcesStats(),    // Comptes par source {csv: 23, mysql: 8, postgresql: 8}
+                api.getStatsPerSource()   // Détails pour le graphique (array)
             ]);
             
             // Mettre à jour le total unifié
@@ -40,19 +41,14 @@ class ETLManager {
                 ui.updateElement('total-employes', stats.data.total_employes || 0);
             }
             
-            // ✅ CORRECTION : Utiliser sourcesData (base unifiée) au lieu de sourcesStats (sources directes)
-            if (sourcesData.success && sourcesData.data) {
-                // Extraire les comptes depuis la base unifiée
-                const csvData = sourcesData.data.find(s => s.source === 'CSV');
-                const mysqlData = sourcesData.data.find(s => s.source === 'MySQL');
-                const postgresqlData = sourcesData.data.find(s => s.source === 'PostgreSQL');
-                
-                ui.updateElement('count-csv', csvData ? csvData.count : 0);
-                ui.updateElement('count-mysql', mysqlData ? mysqlData.count : 0);
-                ui.updateElement('count-postgresql', postgresqlData ? postgresqlData.count : 0);
+            // Mettre à jour les KPI par source (format direct)
+            if (sourcesStats.success && sourcesStats.data) {
+                ui.updateElement('count-csv', sourcesStats.data.csv || 0);
+                ui.updateElement('count-mysql', sourcesStats.data.mysql || 0);
+                ui.updateElement('count-postgresql', sourcesStats.data.postgresql || 0);
             }
             
-            // Mettre à jour les graphiques
+            // Mettre à jour les graphiques (format array)
             if (sourcesData.success) {
                 chartsManager.createSourceChart(sourcesData.data);
             }
@@ -100,7 +96,7 @@ class ETLManager {
                     if (resultDiv) {
                         resultDiv.innerHTML = ui.createMessage(
                             'success',
-                            '✅ Synchronisation terminée ! Les données ont été mises à jour dans la base unifiée.'
+                            'Synchronisation terminée ! Les données ont été mises à jour dans la base unifiée.'
                         );
                     }
                 }, CONFIG.ETL_WAIT_TIME);

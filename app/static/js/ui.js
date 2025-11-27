@@ -73,6 +73,17 @@ class UIManager {
     }
 
     /**
+     * Crée un badge de statut (NOUVEAU - Soft Delete)
+     */
+    createStatutBadge(statut) {
+        if (!statut || statut === 'actif') {
+            return `<span class="statut-badge statut-actif"><i class="fas fa-check-circle"></i> Actif</span>`;
+        } else {
+            return `<span class="statut-badge statut-inactif"><i class="fas fa-times-circle"></i> Inactif</span>`;
+        }
+    }
+
+    /**
      * Formate un montant en FCFA
      */
     formatSalary(salary) {
@@ -176,9 +187,12 @@ class UIManager {
      * Crée une ligne de tableau pour un employé
      */
     createEmployeeRow(emp, options = {}) {
-        const { showId = false, showSource = false, showActions = false, sourceType = null } = options;
+        const { showId = false, showSource = false, showActions = false, sourceType = null, showStatut = false } = options;
         
-        let row = '<tr>';
+        // Classe CSS pour les lignes inactives
+        const rowClass = (emp.statut === 'inactif') ? 'class="row-inactive"' : '';
+        
+        let row = `<tr ${rowClass}>`;
         
         if (showId) {
             row += `<td>${emp.id || '-'}</td>`;
@@ -195,6 +209,11 @@ class UIManager {
         if (showSource) {
             row += `<td>${this.createSourceBadge(emp.source)}</td>`;
             row += `<td style="font-size: 0.9em; color: var(--text-secondary);">${this.formatDateMAJ(emp.updated_at)}</td>`;
+        }
+        
+        // Colonne statut (NOUVEAU - Soft Delete)
+        if (showStatut) {
+            row += `<td>${this.createStatutBadge(emp.statut)}</td>`;
         }
         
         if (showActions && sourceType) {
@@ -223,7 +242,7 @@ class UIManager {
      * Crée un tableau d'employés
      */
     createEmployeeTable(employees, options = {}) {
-        const { showId = false, showSource = false, showActions = false, sourceType = null } = options;
+        const { showId = false, showSource = false, showActions = false, sourceType = null, showStatut = false } = options;
         
         if (!employees || employees.length === 0) {
             return this.createMessage('info', 'Aucun employé à afficher');
@@ -234,11 +253,12 @@ class UIManager {
         if (showId) html += '<th>ID</th>';
         html += '<th>Nom</th><th>Email</th><th>Département</th><th>Salaire</th><th>Date embauche</th>';
         if (showSource) html += '<th>Source</th><th>Date MAJ</th>';
+        if (showStatut) html += '<th>Statut</th>';
         if (showActions) html += '<th>Actions</th>';
         html += '</tr></thead><tbody>';
         
         employees.forEach(emp => {
-            html += this.createEmployeeRow(emp, { showId, showSource, showActions, sourceType });
+            html += this.createEmployeeRow(emp, { showId, showSource, showActions, sourceType, showStatut });
         });
         
         html += '</tbody></table></div>';
@@ -261,6 +281,25 @@ class UIManager {
                 <button class="active" disabled>Page ${currentPage + 1} / ${totalPages}</button>
                 <button onclick="changePage(1)" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>
                     Suivant <i class="fas fa-angle-right"></i>
+                </button>
+            </div>
+        `;
+    }
+
+    /**
+     * Crée les filtres de statut (NOUVEAU - Soft Delete)
+     */
+    createStatutFilters(currentFilter = 'all') {
+        return `
+            <div class="statut-filters">
+                <button class="filter-btn ${currentFilter === 'all' ? 'active' : ''}" onclick="filterByStatut('all')">
+                    <i class="fas fa-list"></i> Tous
+                </button>
+                <button class="filter-btn ${currentFilter === 'actif' ? 'active' : ''}" onclick="filterByStatut('actif')">
+                    <i class="fas fa-check-circle"></i> Actifs
+                </button>
+                <button class="filter-btn ${currentFilter === 'inactif' ? 'active' : ''}" onclick="filterByStatut('inactif')">
+                    <i class="fas fa-times-circle"></i> Inactifs
                 </button>
             </div>
         `;

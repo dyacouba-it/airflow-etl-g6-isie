@@ -21,6 +21,9 @@ class EmployeeManager {
         this.unifiedDataPageSize = 10;
         this.unifiedDataTotal = 0;
         this.unifiedDataEmployees = [];
+        
+        // Filtre de statut (NOUVEAU - Soft Delete)
+        this.currentStatutFilter = 'all';
     }
 
     /**
@@ -43,22 +46,34 @@ class EmployeeManager {
             APP_STATE.currentPage = page;
             const offset = page * CONFIG.PAGE_SIZE;
             
-            const response = await api.getUnifiedEmployees({ 
+            // Préparer les paramètres API avec le filtre de statut (NOUVEAU - Soft Delete)
+            const params = { 
                 limit: CONFIG.PAGE_SIZE,
                 offset: offset
-            });
+            };
+            
+            // Ajouter le filtre statut si ce n'est pas "all"
+            if (this.currentStatutFilter !== 'all') {
+                params.statut = this.currentStatutFilter;
+            }
+            
+            const response = await api.getUnifiedEmployees(params);
             
             const container = document.getElementById('unified-employees-list');
             
             if (response.success && response.data.length > 0) {
                 const total = response.count || 0;
                 
-                let html = `<div style="margin-bottom: 15px; color: var(--text-secondary);">`;
+                // Afficher les filtres de statut (NOUVEAU - Soft Delete)
+                let html = ui.createStatutFilters(this.currentStatutFilter);
+                
+                html += `<div style="margin: 15px 0; color: var(--text-secondary); text-align: center;">`;
                 html += `<strong>${response.data.length}</strong> employé(s) affiché(s) sur <strong>${total}</strong> total`;
                 html += `</div>`;
                 
                 html += ui.createEmployeeTable(response.data, { 
-                    showSource: true 
+                    showSource: true,
+                    showStatut: true  // Afficher la colonne statut (NOUVEAU - Soft Delete)
                 });
                 
                 // Ajouter la pagination
@@ -145,21 +160,32 @@ class EmployeeManager {
                 }
             }
             
-            const allEmployees = this.dashboardEmployees;
-            const total = allEmployees.length;
+            // Filtrer par statut si nécessaire (NOUVEAU - Soft Delete)
+            let filteredEmployees = this.dashboardEmployees;
+            if (this.currentStatutFilter !== 'all') {
+                filteredEmployees = this.dashboardEmployees.filter(emp => 
+                    (emp.statut || 'actif') === this.currentStatutFilter
+                );
+            }
+            
+            const total = filteredEmployees.length;
             
             if (total > 0) {
                 // Extraire la page courante
                 const startIndex = page * CONFIG.PAGE_SIZE;
                 const endIndex = startIndex + CONFIG.PAGE_SIZE;
-                const pageData = allEmployees.slice(startIndex, endIndex);
+                const pageData = filteredEmployees.slice(startIndex, endIndex);
                 
-                let html = `<div style="margin-bottom: 15px; color: var(--text-secondary); text-align: center;">`;
+                // Afficher les filtres de statut (NOUVEAU - Soft Delete)
+                let html = ui.createStatutFilters(this.currentStatutFilter);
+                
+                html += `<div style="margin: 15px 0; color: var(--text-secondary); text-align: center;">`;
                 html += `<strong>${pageData.length}</strong> employé(s) affiché(s) sur <strong>${total}</strong> total`;
                 html += `</div>`;
                 
                 html += ui.createEmployeeTable(pageData, { 
-                    showSource: true 
+                    showSource: true,
+                    showStatut: true  // Afficher la colonne statut (NOUVEAU - Soft Delete)
                 });
                 
                 // Ajouter la pagination
@@ -167,11 +193,16 @@ class EmployeeManager {
                 
                 container.innerHTML = html;
             } else {
-                container.innerHTML = ui.createMessage(
+                // Afficher les filtres même s'il n'y a pas de données
+                let html = ui.createStatutFilters(this.currentStatutFilter);
+                
+                html += ui.createMessage(
                     'warning',
                     'Aucun employé dans la base unifiée. Cliquez sur "Lancer ETL" pour synchroniser les données.',
                     'fa-exclamation-triangle'
                 );
+                
+                container.innerHTML = html;
             }
         } catch (error) {
             console.error('[EmployeeManager] Erreur loadUnifiedEmployees:', error);
@@ -476,14 +507,58 @@ class EmployeeManager {
      * Ouvre le modal d'édition
      */
     editEmployee(source, emp) {
+        console.log('[EmployeeManager] Ouverture modal édition pour:', emp);
+        
         document.getElementById('editModalTitle').textContent = `Modifier l'employé (${source.toUpperCase()})`;
         document.getElementById('edit-source').value = source;
-        document.getElementById('edit-id').value = emp.id;
-        document.getElementById('edit-nom').value = emp.nom;
-        document.getElementById('edit-email').value = emp.email;
+        document.getElementById('edit-id').value = emp.id || '';
+        document.getElementById('edit-nom').value = emp.nom || '';
+        document.getElementById('edit-email').value = emp.email || '';
         document.getElementById('edit-departement').value = emp.departement || '';
         document.getElementById('edit-salaire').value = emp.salaire || '';
-        document.getElementById('edit-date').value = emp.date_embauche ? emp.date_embauche.split('T')[0] : '';
+        
+        // ✅ CORRECTION : Gérer TOUS les formats de date
+        if (emp.date_embauche) {
+            try {
+                let dateForInput = '';
+                
+                // Si format ISO (YYYY-MM-DD ou YYYY-MM-DDTHH:mm:ss)
+                if (String(emp.date_embauche).includes('-')) {
+                    dateForInput = String(emp.date_embauche).split('T')[0];
+                }
+                // Si format RFC 2822 (Wed, 20 Mar 2019 00:00:00 GMT)
+                else if (String(emp.date_embauche).includes(',')) {
+                    const date = new Date(emp.date_embauche);
+                    if (!isNaN(date.getTime())) {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        dateForInput = `${year}-${month}-${day}`;
+                    }
+                }
+                // Autre format : essayer de parser
+                else {
+                    const date = new Date(emp.date_embauche);
+                    if (!isNaN(date.getTime())) {
+                        const year = date.getFullYear();
+                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                        const day = String(date.getDate()).padStart(2, '0');
+                        dateForInput = `${year}-${month}-${day}`;
+                    }
+                }
+                
+                console.log('[EmployeeManager] Date embauche:', emp.date_embauche, '→', dateForInput);
+                document.getElementById('edit-date').value = dateForInput;
+                
+            } catch (error) {
+                console.error('[EmployeeManager] Erreur parsing date:', error);
+                document.getElementById('edit-date').value = '';
+            }
+        } else {
+            console.log('[EmployeeManager] Pas de date d\'embauche');
+            document.getElementById('edit-date').value = '';
+        }
+        
         document.getElementById('edit-modal-message').innerHTML = '';
         ui.toggleModal('editModal', true);
     }
@@ -523,6 +598,20 @@ class EmployeeManager {
         } catch (error) {
             ui.showMessage('edit-modal-message', 'error', 'Erreur de connexion');
         }
+    }
+
+    /**
+     * Filtre les employés par statut (NOUVEAU - Soft Delete)
+     */
+    filterByStatut(statut) {
+        console.log('[EmployeeManager] Filtre statut:', statut);
+        this.currentStatutFilter = statut;
+        
+        // Invalider le cache pour forcer un rechargement
+        this.invalidateCache();
+        
+        // Recharger les employés avec le nouveau filtre (page 0)
+        this.loadUnifiedEmployees(0);
     }
 
     /**
@@ -577,15 +666,44 @@ function addToSource(event, source) {
     employeeManager.addEmployee(event, source);
 }
 
-function editSourceEmployee(source, emp) {
-    employeeManager.editEmployee(source, emp);
+/**
+ * Fonction globale pour éditer un employé (appelée depuis onclick)
+ * Accepte soit un objet employé, soit un ID
+ */
+async function editSourceEmployee(source, empOrId) {
+    // Si c'est un ID (nombre), récupérer les données
+    if (typeof empOrId === 'number' || (typeof empOrId === 'string' && !isNaN(empOrId))) {
+        console.log('[editSourceEmployee] Récupération employé ID:', empOrId, 'de', source);
+        
+        try {
+            const response = await api.getSourceEmployeeById(source, empOrId);
+            
+            if (response.success && response.data) {
+                employeeManager.editEmployee(source, response.data);
+            } else {
+                alert('❌ Erreur : Impossible de charger les données de l\'employé');
+                console.error('[editSourceEmployee] Erreur:', response);
+            }
+        } catch (error) {
+            alert('❌ Erreur de connexion lors du chargement de l\'employé');
+            console.error('[editSourceEmployee] Erreur:', error);
+        }
+    } else {
+        // Si c'est déjà un objet, utiliser directement
+        employeeManager.editEmployee(source, empOrId);
+    }
 }
 
 function saveEdit(event) {
     employeeManager.saveEdit(event);
 }
 
-function deleteSourceEmployee(source, id, nom) {
+/**
+ * Fonction globale pour supprimer un employé (appelée depuis onclick)
+ */
+function deleteSourceEmployee(source, id, encodedNom) {
+    // Décoder le nom si nécessaire
+    const nom = encodedNom ? decodeURIComponent(encodedNom) : `ID ${id}`;
     employeeManager.deleteEmployee(source, id, nom);
 }
 
@@ -608,4 +726,12 @@ function loadUnifiedData() {
  */
 function changeUnifiedPage(action) {
     employeeManager.changeUnifiedPage(action);
+}
+
+/**
+ * Filtre les employés par statut (NOUVEAU - Soft Delete)
+ * @param {string} statut - 'all', 'actif' ou 'inactif'
+ */
+function filterByStatut(statut) {
+    employeeManager.filterByStatut(statut);
 }

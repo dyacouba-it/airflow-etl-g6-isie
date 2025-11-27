@@ -1,0 +1,153 @@
+# ============================================
+# .gitignore pour Projet ETL Apache Airflow
+# ============================================
+
+# ====================
+# Docker & Volumes
+# ====================
+# Données persistantes des bases de données
+postgres-data/
+mysql-data/
+prometheus-data/
+grafana-data/
+
+# Logs Docker
+*.log
+logs/
+
+# ====================
+# Apache Airflow
+# ====================
+# Logs Airflow
+airflow/logs/
+dags/__pycache__/
+dags/*.pyc
+
+# Métadonnées Airflow (base SQLite locale)
+airflow.db
+airflow.cfg.backup
+webserver_config.py
+
+# ====================
+# Python
+# ====================
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+
+# ====================
+# Système
+# ====================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+.directory
+
+# ====================
+# Fichiers sensibles
+# ====================
+# Variables d'environnement
+.env
+.env.local
+.env.*.local
+
+# Credentials
+*.pem
+*.key
+secrets/
+credentials/
+
+# ====================
+# Temporaires
+# ====================
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ====================
+# Tests & Coverage
+# ====================
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ====================
+# Documentation
+# ====================
+# Pas d'exclusion pour README.md et autres docs importantes
+
+# ====================
+# Node modules (si frontend séparé)
+# ====================
+node_modules/
+package-lock.json
+
+# ====================
+# Backups
+# ====================
+*.bak
+*.backup
+backup/
+
+# ====================
+# Archives
+# ====================
+# Ne pas exclure les archives de release
+# *.zip
+# *.tar.gz
+
+# ====================
+# Spécifique au projet
+# ====================
+# Données CSV générées (garder data.csv original)
+# data/*.csv
+# !data/data.csv
+
+# Captures d'écran (si générées automatiquement)
+screenshots/
+captures/

@@ -1,3 +1,6 @@
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
 -- MySQL Source - Initialisation avec données
 CREATE TABLE IF NOT EXISTS employes_mysql (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -14,7 +17,7 @@ INSERT IGNORE INTO employes_mysql (nom, email, departement, salaire, date_embauc
 ('Rasmané Ouedraogo', 'rasmane.ouedraogo@entreprise.bf', 'Direction Generale', 1200000, '2017-01-10'),
 ('Safiatou Sankara', 'safiatou.sankara@entreprise.bf', 'Finance', 850000, '2019-05-18'),
 ('Tegawendé Ilboudo', 'tegawende.ilboudo@entreprise.bf', 'Ingenierie', 920000, '2018-09-23'),
-('Valérie Kambou', 'valerie.kambou@entreprise.bf', 'Ressources Humaines', 780000, '2020-02-14'),
+('Valérie Kambou', 'valerie.kambou@entreprise.bf', 'RH', 780000, '2020-02-14'),
 ('Wendyam Sawadogo', 'wendyam.sawadogo@entreprise.bf', 'Commercial', 810000, '2019-11-07'),
 ('Yasmine Compaore', 'yasmine.compaore@entreprise.bf', 'Marketing', 750000, '2021-04-22'),
 ('Zakaria Kabore', 'zakaria.kabore@entreprise.bf', 'Informatique', 980000, '2018-07-15'),
