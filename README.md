@@ -358,10 +358,10 @@ Le pipeline ETL respecte le statut lors de la synchronisation :
    - Si l'employé existe déjà → UPDATE avec mise à jour du statut
    - Si l'employé est nouveau → INSERT avec `statut = 'actif'` par défaut
 
-  **Puis synchroniser via ETL :**
-    ```bash
+4. **Puis synchroniser via ETL :**
+```bash
     curl -X POST http://localhost:5000/api/etl/trigger
-    ```
+```
 ---
 
 ## Prérequis
