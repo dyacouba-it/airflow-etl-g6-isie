@@ -6,7 +6,7 @@ from datetime import datetime
 class AirflowService:
     def __init__(self):
         self.base_url = os.getenv('AIRFLOW_URL', 'http://airflow-webserver:8080/api/v1')
-        self.dag_id = 'etl_employeFN'
+        self.dag_id = 'etl_employe'
         self.auth = ('admin', 'admin')
     
     def trigger_dag(self):

@@ -280,36 +280,33 @@ def delete_postgresql_employe(employe_id):
 
 
 # ==================== STATISTIQUES ====================
-
+  
 @sources_bp.route('/sources/stats', methods=['GET'])
 def get_sources_stats():
-    """Compte les employés PAR SOURCE depuis employes_unified"""
+    """Statistiques des BASES SOURCES DIRECTES (temps réel)"""
     try:
-        # Importer db_service pour accéder à employes_unified
-        from services.db_service import DatabaseService
-        db_service = DatabaseService()
+        # Compter directement depuis les bases sources (pas employes_unified)
+        mysql_count = source_service.get_mysql_count()
+        postgresql_count = source_service.get_postgresql_count()
         
-        # Récupérer les stats groupées par source
-        stats_list = db_service.get_stats_by_source()
-        
-        # Transformer en dictionnaire {csv: X, mysql: Y, postgresql: Z}
-        stats = {'csv': 0, 'mysql': 0, 'postgresql': 0}
-        
-        for row in stats_list:
-            source = row['source'].lower()
-            if source in stats:
-                stats[source] = int(row['count'])
+        # CSV count depuis le fichier
+        csv_count = source_service.get_csv_count()
         
         return jsonify({
             'success': True,
-            'data': stats
+            'data': {
+                'csv': csv_count,
+                'mysql': mysql_count,
+                'postgresql': postgresql_count,
+                'total_sources': mysql_count + postgresql_count + csv_count
+            }
         }), 200
-        
     except Exception as e:
         return jsonify({
             'success': False,
             'message': str(e)
         }), 500
+    
 # ==================== CSV SOURCE (LECTURE FICHIER) ====================
 
 @sources_bp.route('/sources/csv/employes', methods=['GET'])

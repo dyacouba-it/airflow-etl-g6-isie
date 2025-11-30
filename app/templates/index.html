@@ -78,7 +78,7 @@
                         </div>
                     </div>
                     <div class="kpi-value" id="total-employes">-</div>
-                    <div class="kpi-label">Total employés (base unifiée)</div>
+                    <div class="kpi-label">Total employés (bd unifiée)</div>
                 </div>
                 
                 <div class="kpi-card">
@@ -88,7 +88,7 @@
                         </div>
                     </div>
                     <div class="kpi-value" id="count-csv">-</div>
-                    <div class="kpi-label">Employés CSV</div>
+                    <div class="kpi-label">Employés CSV(bd unifiée)</div>
                 </div>
                 
                 <div class="kpi-card">
@@ -98,7 +98,7 @@
                         </div>
                     </div>
                     <div class="kpi-value" id="count-mysql">-</div>
-                    <div class="kpi-label">Employés MySQL</div>
+                    <div class="kpi-label">Employés MySQL(bd unifiée)</div>
                 </div>
                 
                 <div class="kpi-card">
@@ -108,7 +108,7 @@
                         </div>
                     </div>
                     <div class="kpi-value" id="count-postgresql">-</div>
-                    <div class="kpi-label">Employés PostgreSQL</div>
+                    <div class="kpi-label">Employés PostgreSQL(bd unifiée)</div>
                 </div>
             </div>
             
@@ -168,6 +168,19 @@
                     </p>
                 </div>
                 
+                <!-- Filtres par statut -->
+                <div style="display: flex; justify-content: center; gap: 10px; margin: 20px 0;">
+                    <button class="btn btn-primary status-filter-btn active" onclick="filterByStatus('all')" data-filter="all">
+                        <i class="fas fa-list"></i> Tous
+                    </button>
+                    <button class="btn btn-secondary status-filter-btn" onclick="filterByStatus('actif')" data-filter="actif">
+                        <i class="fas fa-check-circle"></i> Actifs
+                    </button>
+                    <button class="btn btn-secondary status-filter-btn" onclick="filterByStatus('inactif')" data-filter="inactif">
+                        <i class="fas fa-times-circle"></i> Inactifs
+                    </button>
+                </div>
+                
                 <div id="unified-data-container">
                     <div class="loading">
                         <div class="spinner"></div>
@@ -216,13 +229,26 @@
                 
                 <!-- Source Selection Cards -->
                 <div class="source-stats-grid">
+
+                    <div class="source-stat-card">
+                        <div class="source-stat-header">
+                            <div class="source-stat-icon" style="background: #10b981;">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div>
+                                <div class="source-stat-label">Total sources</div>
+                            </div>
+                        </div>
+                        <div class="source-stat-value" id="src-count-total">-</div>
+                    </div>
+
                     <div class="source-stat-card" onclick="selectSource('csv')">
                         <div class="source-stat-header">
                             <div class="source-stat-icon" style="background: #10b981;">
                                 <i class="fas fa-file-csv"></i>
                             </div>
                             <div>
-                                <div class="source-stat-label">CSV (Fichier)</div>
+                                <div class="source-stat-label">CSV (Fichier /data/data.csv)</div>
                             </div>
                         </div>
                         <div class="source-stat-value" id="src-count-csv">-</div>
@@ -235,7 +261,7 @@
                                 <i class="fas fa-database"></i>
                             </div>
                             <div>
-                                <div class="source-stat-label">MySQL Source</div>
+                                <div class="source-stat-label">Bd MySQL Source</div>
                             </div>
                         </div>
                         <div class="source-stat-value" id="src-count-mysql">-</div>
@@ -248,7 +274,7 @@
                                 <i class="fas fa-elephant"></i>
                             </div>
                             <div>
-                                <div class="source-stat-label">PostgreSQL Source</div>
+                                <div class="source-stat-label">Bd PostgreSQL Source</div>
                             </div>
                         </div>
                         <div class="source-stat-value" id="src-count-postgresql">-</div>
@@ -380,115 +406,18 @@
                 <div class="info-box">
                     <h4><i class="fas fa-info-circle"></i> Architecture API</h4>
                     <p><strong>Base unifiée</strong> : Lecture seule (GET uniquement)<br>
-                    <strong>Bases sources</strong> : CRUD complet (GET, POST, PUT, DELETE)</p>
+                    <strong>Bases sources</strong> : CRUD complet (GET, POST, PUT, DELETE)<br>
+                    <strong>Base URL</strong> : <code>http://localhost:5000/api</code></p>
                 </div>
                 
-                <h3 style="margin: 25px 0 15px; color: var(--primary);">Base Unifiée (READ ONLY)</h3>
+                <h3 style="margin: 25px 0 15px; color: var(--primary);">📊 Statistiques</h3>
                 <table>
                     <thead>
                         <tr>
-                            <th>Méthode</th>
+                            <th style="width: 100px;">Méthode</th>
                             <th>Endpoint</th>
                             <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
-                            <td><code>/api/employes</code></td>
-                            <td>Liste tous les employés de la base unifiée</td>
-                        </tr>
-                        <tr>
-                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
-                            <td><code>/api/employes/:id</code></td>
-                            <td>Détails d'un employé</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <h3 style="margin: 25px 0 15px; color: var(--primary);">MySQL Source (CRUD Complet)</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Méthode</th>
-                            <th>Endpoint</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
-                            <td><code>/api/sources/mysql/employes</code></td>
-                            <td>Liste employés MySQL source</td>
-                        </tr>
-                        <tr>
-                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
-                            <td><code>/api/sources/mysql/employes/:id</code></td>
-                            <td>Détails d'un employé MySQL</td>
-                        </tr>
-                        <tr>
-                            <td><span class="source-badge" style="background: #f59e0b;">POST</span></td>
-                            <td><code>/api/sources/mysql/employes</code></td>
-                            <td>Ajouter un employé dans MySQL</td>
-                        </tr>
-                        <tr>
-                            <td><span class="source-badge" style="background: #3b82f6;">PUT</span></td>
-                            <td><code>/api/sources/mysql/employes/:id</code></td>
-                            <td>Modifier un employé MySQL</td>
-                        </tr>
-                        <tr>
-                            <td><span class="source-badge" style="background: #ef4444;">DELETE</span></td>
-                            <td><code>/api/sources/mysql/employes/:id</code></td>
-                            <td>Supprimer un employé MySQL</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <h3 style="margin: 25px 0 15px; color: var(--primary);">PostgreSQL Source (CRUD Complet)</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Méthode</th>
-                            <th>Endpoint</th>
-                            <th>Description</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
-                            <td><code>/api/sources/postgresql/employes</code></td>
-                            <td>Liste employés PostgreSQL source</td>
-                        </tr>
-                        <tr>
-                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
-                            <td><code>/api/sources/postgresql/employes/:id</code></td>
-                            <td>Détails d'un employé PostgreSQL</td>
-                        </tr>
-                        <tr>
-                            <td><span class="source-badge" style="background: #f59e0b;">POST</span></td>
-                            <td><code>/api/sources/postgresql/employes</code></td>
-                            <td>Ajouter un employé dans PostgreSQL</td>
-                        </tr>
-                        <tr>
-                            <td><span class="source-badge" style="background: #3b82f6;">PUT</span></td>
-                            <td><code>/api/sources/postgresql/employes/:id</code></td>
-                            <td>Modifier un employé PostgreSQL</td>
-                        </tr>
-                        <tr>
-                            <td><span class="source-badge" style="background: #ef4444;">DELETE</span></td>
-                            <td><code>/api/sources/postgresql/employes/:id</code></td>
-                            <td>Supprimer un employé PostgreSQL</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <h3 style="margin: 25px 0 15px; color: var(--primary);">Statistiques</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Méthode</th>
-                            <th>Endpoint</th>
-                            <th>Description</th>
+                            <th>Paramètres</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -496,27 +425,188 @@
                             <td><span class="source-badge" style="background: #10b981;">GET</span></td>
                             <td><code>/api/stats</code></td>
                             <td>Statistiques globales de la base unifiée</td>
+                            <td>-</td>
                         </tr>
                         <tr>
                             <td><span class="source-badge" style="background: #10b981;">GET</span></td>
                             <td><code>/api/sources/stats</code></td>
-                            <td>Statistiques des bases sources</td>
+                            <td>Statistiques des bases sources (compteurs)</td>
+                            <td>-</td>
                         </tr>
                         <tr>
                             <td><span class="source-badge" style="background: #10b981;">GET</span></td>
                             <td><code>/api/stats/sources</code></td>
-                            <td>Répartition par source (base unifiée)</td>
+                            <td>Répartition par source (graphique)</td>
+                            <td>-</td>
                         </tr>
                     </tbody>
                 </table>
                 
-                <h3 style="margin: 25px 0 15px; color: var(--primary);">ETL</h3>
+                <h3 style="margin: 25px 0 15px; color: var(--primary);">🗄️ Base Unifiée (READ ONLY)</h3>
                 <table>
                     <thead>
                         <tr>
-                            <th>Méthode</th>
+                            <th style="width: 100px;">Méthode</th>
                             <th>Endpoint</th>
                             <th>Description</th>
+                            <th>Paramètres</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/employes</code></td>
+                            <td>Liste tous les employés de la base unifiée</td>
+                            <td>
+                                <code>limit</code> (défaut: 100)<br>
+                                <code>offset</code> (défaut: 0)<br>
+                                <code>source</code> (CSV, mysql, postgresql)<br>
+                                <code>statut</code> (actif, inactif)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/employes/:id</code></td>
+                            <td>Détails d'un employé</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3 style="margin: 25px 0 15px; color: var(--primary);">📄 CSV Source (READ ONLY)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 100px;">Méthode</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                            <th>Paramètres</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/employes?source=CSV</code></td>
+                            <td>Employés CSV (via base unifiée, lecture seule)</td>
+                            <td><code>limit</code>, <code>offset</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="background: #fef3c7; padding: 15px; border-radius: 10px; border-left: 4px solid #f59e0b; margin-bottom: 25px;">
+                    <p style="margin: 0; color: #92400e;">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Note</strong> : Les données CSV sont en lecture seule. Pour les modifier, éditez le fichier CSV source puis relancez l'ETL.
+                    </p>
+                </div>
+                
+                <h3 style="margin: 25px 0 15px; color: var(--primary);">🔵 MySQL Source (CRUD Complet)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 100px;">Méthode</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                            <th>Body / Paramètres</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/sources/mysql/employes</code></td>
+                            <td>Liste employés MySQL source</td>
+                            <td><code>limit</code>, <code>offset</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/sources/mysql/employes/:id</code></td>
+                            <td>Détails d'un employé MySQL</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #f59e0b;">POST</span></td>
+                            <td><code>/api/sources/mysql/employes</code></td>
+                            <td>Ajouter un employé dans MySQL</td>
+                            <td>
+                                <code>nom</code> (requis)<br>
+                                <code>email</code> (requis)<br>
+                                <code>departement</code> (requis)<br>
+                                <code>salaire</code> (requis)<br>
+                                <code>date_embauche</code> (optionnel)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #3b82f6;">PUT</span></td>
+                            <td><code>/api/sources/mysql/employes/:id</code></td>
+                            <td>Modifier un employé MySQL</td>
+                            <td>Mêmes champs que POST</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #ef4444;">DELETE</span></td>
+                            <td><code>/api/sources/mysql/employes/:id</code></td>
+                            <td>Supprimer un employé MySQL</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3 style="margin: 25px 0 15px; color: var(--primary);">🟠 PostgreSQL Source (CRUD Complet)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 100px;">Méthode</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                            <th>Body / Paramètres</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/sources/postgresql/employes</code></td>
+                            <td>Liste employés PostgreSQL source</td>
+                            <td><code>limit</code>, <code>offset</code></td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/sources/postgresql/employes/:id</code></td>
+                            <td>Détails d'un employé PostgreSQL</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #f59e0b;">POST</span></td>
+                            <td><code>/api/sources/postgresql/employes</code></td>
+                            <td>Ajouter un employé dans PostgreSQL</td>
+                            <td>
+                                <code>nom</code> (requis)<br>
+                                <code>email</code> (requis)<br>
+                                <code>departement</code> (requis)<br>
+                                <code>salaire</code> (requis)<br>
+                                <code>date_embauche</code> (optionnel)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #3b82f6;">PUT</span></td>
+                            <td><code>/api/sources/postgresql/employes/:id</code></td>
+                            <td>Modifier un employé PostgreSQL</td>
+                            <td>Mêmes champs que POST</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #ef4444;">DELETE</span></td>
+                            <td><code>/api/sources/postgresql/employes/:id</code></td>
+                            <td>Supprimer un employé PostgreSQL</td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <h3 style="margin: 25px 0 15px; color: var(--primary);">⚙️ ETL (Pipeline Airflow)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 100px;">Méthode</th>
+                            <th>Endpoint</th>
+                            <th>Description</th>
+                            <th>Réponse</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -524,19 +614,68 @@
                             <td><span class="source-badge" style="background: #f59e0b;">POST</span></td>
                             <td><code>/api/etl/trigger</code></td>
                             <td>Déclencher le DAG Airflow manuellement</td>
+                            <td>Confirmation de déclenchement</td>
                         </tr>
                         <tr>
                             <td><span class="source-badge" style="background: #10b981;">GET</span></td>
                             <td><code>/api/etl/status</code></td>
                             <td>Statut actuel du DAG</td>
+                            <td>État : running, success, failed</td>
                         </tr>
                         <tr>
                             <td><span class="source-badge" style="background: #10b981;">GET</span></td>
                             <td><code>/api/etl/history</code></td>
-                            <td>Historique des exécutions</td>
+                            <td>Historique des exécutions ETL</td>
+                            <td>Liste des 10 dernières exécutions</td>
+                        </tr>
+                        <tr>
+                            <td><span class="source-badge" style="background: #10b981;">GET</span></td>
+                            <td><code>/api/etl/last-sync</code></td>
+                            <td>Date de la dernière synchronisation</td>
+                            <td>Timestamp dernière MAJ base unifiée</td>
                         </tr>
                     </tbody>
                 </table>
+                
+                <h3 style="margin: 25px 0 15px; color: var(--primary);">📝 Exemples de requêtes</h3>
+                
+                <div style="background: #f9fafb; padding: 20px; border-radius: 10px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
+                    <h4 style="color: #667eea; margin-bottom: 15px;"><i class="fas fa-code"></i> Obtenir tous les employés actifs</h4>
+                    <pre style="background: #1f2937; color: #10b981; padding: 15px; border-radius: 8px; overflow-x: auto;">GET /api/employes?statut=actif&limit=50</pre>
+                </div>
+                
+                <div style="background: #f9fafb; padding: 20px; border-radius: 10px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
+                    <h4 style="color: #667eea; margin-bottom: 15px;"><i class="fas fa-code"></i> Ajouter un employé dans MySQL</h4>
+                    <pre style="background: #1f2937; color: #10b981; padding: 15px; border-radius: 8px; overflow-x: auto;">POST /api/sources/mysql/employes
+Content-Type: application/json
+
+{
+  "nom": "Abdoulaye Ouedraogo",
+  "email": "abdoulaye@entreprise.bf",
+  "departement": "Informatique",
+  "salaire": 850000,
+  "date_embauche": "2024-03-15"
+}</pre>
+                </div>
+                
+                <div style="background: #f9fafb; padding: 20px; border-radius: 10px; border: 1px solid #e5e7eb; margin-bottom: 20px;">
+                    <h4 style="color: #667eea; margin-bottom: 15px;"><i class="fas fa-code"></i> Déclencher l'ETL</h4>
+                    <pre style="background: #1f2937; color: #10b981; padding: 15px; border-radius: 8px; overflow-x: auto;">POST /api/etl/trigger
+
+Réponse: {"success": true, "message": "DAG déclenché avec succès"}</pre>
+                </div>
+                
+                <div class="alert-box" style="margin-top: 30px;">
+                    <i class="fas fa-lightbulb"></i>
+                    <div class="alert-box-content">
+                        <h4>Workflow complet</h4>
+                        <p><strong>1.</strong> Ajouter un employé dans une source (CSV/MySQL/PostgreSQL)<br>
+                        <strong>2.</strong> Déclencher l'ETL : <code>POST /api/etl/trigger</code><br>
+                        <strong>3.</strong> Attendre 15 secondes (traitement Airflow)<br>
+                        <strong>4.</strong> Vérifier la base unifiée : <code>GET /api/employes</code><br>
+                        <strong>5.</strong> Le nouvel employé apparaît automatiquement !</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

@@ -37,7 +37,7 @@ default_args = {
 }
 
 dag = DAG(
-    'etl_employeFN',
+    'etl_employe',
     default_args=default_args,
     schedule_interval='@daily',
     catchup=False,
@@ -433,7 +433,7 @@ def detect_deletions(**kwargs) -> Dict[str, Any]:
         return {'status': 'error', 'count': 0, 'message': str(e)}
 
 # -----------------------
-# CHARGEMENT (CORRIGÉ - Gestion robuste des dates)
+# CHARGEMENT (Gestion robuste des dates)
 # -----------------------
 def load_to_target(**kwargs) -> str:
     """Chargement sécurisé avec gestion robuste des types de données"""
@@ -499,7 +499,7 @@ def load_to_target(**kwargs) -> str:
                     continue
                     
             conn.commit()
-            logger.info(f"✓ Insertions terminées: {inserted} réussies, {errors} erreurs")
+            logger.info(f"Insertions terminées: {inserted} réussies, {errors} erreurs")
             
         except Exception as e:
             conn.rollback()
@@ -556,7 +556,7 @@ def load_to_target(**kwargs) -> str:
                     continue
                     
             conn.commit()
-            logger.info(f"✓ Mises à jour terminées: {updated} réussies, {errors} erreurs")
+            logger.info(f"Mises à jour terminées: {updated} réussies, {errors} erreurs")
             
         except Exception as e:
             conn.rollback()
@@ -565,7 +565,7 @@ def load_to_target(**kwargs) -> str:
             cur.close()
             conn.close()
 
-    logger.info(f"✓ Chargement terminé: {inserted} inserts, {updated} updates, {errors} erreurs")
+    logger.info(f"Chargement terminé: {inserted} inserts, {updated} updates, {errors} erreurs")
     
     if errors > 0:
         return f"Chargement terminé avec {errors} erreurs ({inserted} inserts, {updated} updates)"
@@ -622,10 +622,10 @@ def validate_data(**kwargs) -> str:
         active_count = int(df_active.iloc[0]['active_count'])
         
         if active_count == 0 and total > 0:
-            logger.error("❌ CRITIQUE: Aucun employé actif en base!")
+            logger.error("CRITIQUE: Aucun employé actif en base!")
             raise AirflowException("Aucun employé actif après synchronisation")
         elif active_count > 0:
-            logger.info(f"✓ {active_count} employés actifs synchronisés")
+            logger.info(f"{active_count} employés actifs synchronisés")
 
         return f"Validation OK - {total} total ({active_count} actifs)"
         
@@ -645,7 +645,7 @@ t_delete = PythonOperator(task_id='detect_deletions', python_callable=detect_del
 t_load = PythonOperator(task_id='load_data', python_callable=load_to_target, trigger_rule='all_done', dag=dag)
 t_validate = PythonOperator(task_id='validate', python_callable=validate_data, trigger_rule='all_done', dag=dag)
 
-# -----------------------
-# Ordre d'exécution
-# -----------------------
+# ------------------------------------
+# Ordre d'exécution des taches du dag
+# ------------------------------------
 [t_csv, t_mysql, t_pgsql] >> t_transform >> t_compare >> t_delete >> t_load >> t_validate

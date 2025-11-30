@@ -29,11 +29,10 @@ class ETLManager {
      */
     async loadStats() {
         try {
-            // Charger depuis la BASE UNIFIÉE (après ETL)
-            const [stats, sourcesStats, sourcesData] = await Promise.all([
+            // Charger UNIQUEMENT depuis la BASE UNIFIÉE (après ETL)
+            const [stats, sourcesData] = await Promise.all([
                 api.getStats(),           // Total unifié
-                api.getSourcesStats(),    // Comptes par source {csv: 23, mysql: 8, postgresql: 8}
-                api.getStatsPerSource()   // Détails pour le graphique (array)
+                api.getStatsPerSource()   // Par source depuis employes_unified (array)
             ]);
             
             // Mettre à jour le total unifié
@@ -41,14 +40,18 @@ class ETLManager {
                 ui.updateElement('total-employes', stats.data.total_employes || 0);
             }
             
-            // Mettre à jour les KPI par source (format direct)
-            if (sourcesStats.success && sourcesStats.data) {
-                ui.updateElement('count-csv', sourcesStats.data.csv || 0);
-                ui.updateElement('count-mysql', sourcesStats.data.mysql || 0);
-                ui.updateElement('count-postgresql', sourcesStats.data.postgresql || 0);
+            // Transformer l'array en compteurs individuels
+            if (sourcesData.success && sourcesData.data) {
+                const csvData = sourcesData.data.find(s => s.source.toLowerCase() === 'csv');
+                const mysqlData = sourcesData.data.find(s => s.source.toLowerCase() === 'mysql');
+                const postgresqlData = sourcesData.data.find(s => s.source.toLowerCase() === 'postgresql');
+                
+                ui.updateElement('count-csv', csvData ? csvData.count : 0);
+                ui.updateElement('count-mysql', mysqlData ? mysqlData.count : 0);
+                ui.updateElement('count-postgresql', postgresqlData ? postgresqlData.count : 0);
             }
             
-            // Mettre à jour les graphiques (format array)
+            // Mettre à jour les graphiques
             if (sourcesData.success) {
                 chartsManager.createSourceChart(sourcesData.data);
             }

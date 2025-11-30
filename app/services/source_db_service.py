@@ -15,7 +15,8 @@ class SourceDatabaseService:
             'database': os.getenv('MYSQL_SOURCE_DB', 'source_db'),
             'user': os.getenv('MYSQL_SOURCE_USER', 'mysqluser'),
             'password': os.getenv('MYSQL_SOURCE_PASSWORD', 'mysqlpass'),
-            'charset': 'utf8mb4'
+            'charset': 'utf8mb4',
+            'autocommit': True  # ← CORRECTION: Lire les données à jour
         }
         
         # Configuration PostgreSQL Source
@@ -385,83 +386,85 @@ class SourceDatabaseService:
             return count
         finally:
             if conn:
-                conn.close()    # ========== CSV (avec fallback vers base unifiée) ==========
+                conn.close()
+
+                # ========== CSV ==========
     
     def get_csv_count(self):
-        """
-        Compte les employés CSV depuis le fichier source.
-        Si le fichier n'est pas trouvé, compte depuis la base unifiée (fallback).
-        """
-        import sys
+        """Compte le nombre d'employés dans le fichier CSV"""
+        import csv
+        
+        # Chemins possibles pour le fichier CSV
+        possible_paths = [
+            os.getenv('CSV_FILE_PATH'),
+            '/data/data.csv',
+            os.path.join(os.getcwd(), 'data', 'data.csv'),
+            '/app/data/data.csv',
+        ]
+        
+        # Trouver le fichier CSV
+        csv_file = None
+        for path in [p for p in possible_paths if p]:
+            if os.path.exists(path):
+                csv_file = path
+                break
+        
+        # Si le fichier n'existe pas
+        if not csv_file:
+            return 0
         
         try:
-            # Chemins possibles pour le fichier CSV (ordre de priorité)
-            possible_paths = [
-                os.getenv('CSV_FILE_PATH'),                                    # 1. Variable d'environnement
-                '/data/data.csv',                                              # 2. Depuis racine projet (Docker)
-                os.path.join(os.getcwd(), 'data', 'data.csv'),                # 3. Relatif depuis CWD
-                os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'data', 'data.csv'),  # 4. Relatif depuis ce fichier
-                '/app/data/data.csv',                                          # 5. Si l'app est dans /app
-                '/opt/airflow/data/data.csv',                                  # 6. Si Airflow partage le volume
-                os.path.join(os.path.expanduser('~'), 'data', 'data.csv'),   # 7. Home directory
-            ]
-            
-            # Filtrer les None
-            possible_paths = [p for p in possible_paths if p]
-            
-            csv_file = None
-            for path in possible_paths:
-                print(f"[CSV] Tentative : {path}", file=sys.stderr)
-                if os.path.exists(path):
-                    csv_file = path
-                    print(f"[CSV] ✅ Fichier trouvé : {csv_file}", file=sys.stderr)
-                    break
-            
-            if csv_file:
-                # Compter les lignes (en excluant l'en-tête)
-                with open(csv_file, 'r', encoding='utf-8') as f:
-                    lines = [line for line in f if line.strip()]  # Lignes non vides
-                    line_count = len(lines)
-                    # Soustraire 1 pour l'en-tête (si présent)
-                    data_count = max(0, line_count - 1)
-                
-                print(f"[CSV] ✅ Fichier : Total lignes={line_count}, Données={data_count}", file=sys.stderr)
-                return data_count
-            
-            # FALLBACK : Compter depuis la base unifiée
-            print(f"[CSV] ⚠️ Fichier non trouvé, utilisation du FALLBACK (base unifiée)", file=sys.stderr)
-            print(f"[CSV] Chemins testés : {possible_paths}", file=sys.stderr)
-            
-            try:
-                import psycopg2
-                target_db = os.getenv('TARGET_DB')
-                if not target_db:
-                    print(f"[CSV] ❌ TARGET_DB non définie", file=sys.stderr)
-                    return 0
-                
-                conn = psycopg2.connect(target_db)
-                cursor = conn.cursor()
-                
-                # Compter les employés CSV dans la base unifiée
-                query = "SELECT COUNT(*) FROM employes_unified WHERE LOWER(source) = 'csv'"
-                cursor.execute(query)
-                count = cursor.fetchone()[0]
-                
-                cursor.close()
-                conn.close()
-                
-                print(f"[CSV] ✅ FALLBACK : {count} employés CSV dans la base unifiée", file=sys.stderr)
-                return count
-                
-            except Exception as e:
-                print(f"[CSV] ❌ FALLBACK échoué : {str(e)}", file=sys.stderr)
-                return 0
-        
-        except FileNotFoundError as e:
-            print(f"[CSV] ❌ FileNotFoundError : {str(e)}", file=sys.stderr)
-            return 0
+            with open(csv_file, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                return sum(1 for row in reader)
         except Exception as e:
-            print(f"[CSV] ❌ Erreur : {type(e).__name__} - {str(e)}", file=sys.stderr)
-            import traceback
-            traceback.print_exc(file=sys.stderr)
+            print(f"Erreur lors du comptage CSV : {str(e)}")
             return 0
+    
+    def get_csv_employees(self, limit=100, offset=0):
+        """Récupère les employés depuis le fichier CSV"""
+        import csv
+        
+        # Chemins possibles pour le fichier CSV
+        possible_paths = [
+            os.getenv('CSV_FILE_PATH'),
+            '/data/data.csv',
+            os.path.join(os.getcwd(), 'data', 'data.csv'),
+            '/app/data/data.csv',
+        ]
+        
+        # Trouver le fichier CSV
+        csv_file = None
+        for path in [p for p in possible_paths if p]:
+            if os.path.exists(path):
+                csv_file = path
+                break
+        
+        if not csv_file:
+            return []
+        
+        try:
+            employees = []
+            with open(csv_file, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                for i, row in enumerate(reader):
+                    # Appliquer la pagination
+                    if i < offset:
+                        continue
+                    if len(employees) >= limit:
+                        break
+                    
+                    employees.append({
+                        'id': int(row.get('id', 0)) if row.get('id') else i + 1,
+                        'nom': row.get('nom', ''),
+                        'email': row.get('email', ''),
+                        'departement': row.get('departement', ''),
+                        'salaire': float(row.get('salaire', 0)) if row.get('salaire') else 0,
+                        'date_embauche': row.get('date_embauche', None)
+                    })
+            
+            return employees
+            
+        except Exception as e:
+            print(f"Erreur lors de la lecture CSV : {str(e)}")
+            return []

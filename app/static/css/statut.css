@@ -1,117 +1,19 @@
-/* ============================================
-   STYLES STATUT - Soft Delete
-   ============================================ */
+/* CSS pour les badges de statut */
+.source-badge-success {
+    background: #10b981 !important;
+    color: white !important;
+}
 
-/* Badges de statut */
-.statut-badge {
-    padding: 6px 14px;
-    border-radius: var(--radius-sm, 8px);
-    font-size: 0.9em;
+.source-badge-danger {
+    background: #ef4444 !important;
+    color: white !important;
+}
+
+/* Style pour les boutons de filtre actifs */
+.status-filter-btn {
+    min-width: 120px;
+}
+
+.status-filter-btn.active {
     font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    white-space: nowrap;
-}
-
-.statut-actif {
-    background: #d1fae5;
-    color: #065f46;
-    border: 1px solid #10b981;
-}
-
-.statut-inactif {
-    background: #f3f4f6;
-    color: #6b7280;
-    border: 1px solid #d1d5db;
-}
-
-/* Lignes inactives (effet grisé) */
-.row-inactive {
-    opacity: 0.6;
-    background: #f9fafb !important;
-}
-
-.row-inactive:hover {
-    background: #f3f4f6 !important;
-}
-
-/* Filtres de statut */
-.statut-filters {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    margin: 20px 0;
-    flex-wrap: wrap;
-}
-
-.filter-btn {
-    padding: 12px 24px;
-    border: 2px solid var(--border, #e5e7eb);
-    background: var(--bg-card, #ffffff);
-    border-radius: var(--radius-md, 12px);
-    cursor: pointer;
-    font-weight: 600;
-    font-size: 1em;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--text-primary, #1f2937);
-}
-
-.filter-btn:hover:not(.active) {
-    background: var(--light, #f9fafb);
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-}
-
-.filter-btn.active {
-    background: linear-gradient(135deg, var(--primary, #667eea), var(--secondary, #764ba2));
-    color: white;
-    border-color: var(--primary, #667eea);
-    box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
-
-.filter-btn i {
-    font-size: 1.1em;
-}
-
-/* Mode sombre */
-[data-theme="dark"] .statut-actif {
-    background: #065f4680;
-    color: #d1fae5;
-    border-color: #10b981;
-}
-
-[data-theme="dark"] .statut-inactif {
-    background: #37415180;
-    color: #d1d5db;
-    border-color: #6b7280;
-}
-
-[data-theme="dark"] .row-inactive {
-    background: #1f293780 !important;
-}
-
-[data-theme="dark"] .row-inactive:hover {
-    background: #37415180 !important;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .statut-filters {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .filter-btn {
-        width: 100%;
-        justify-content: center;
-    }
-    
-    .statut-badge {
-        font-size: 0.8em;
-        padding: 4px 10px;
-    }
 }

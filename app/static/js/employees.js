@@ -21,8 +21,9 @@ class EmployeeManager {
         this.unifiedDataPageSize = 10;
         this.unifiedDataTotal = 0;
         this.unifiedDataEmployees = [];
+        this.unifiedDataStatusFilter = 'all';  // Filtre statut pour Base unifiée
         
-        // Filtre de statut (NOUVEAU - Soft Delete)
+        // Filtre de statut (NOUVEAU - Soft Delete) pour Tableau de bord
         this.currentStatutFilter = 'all';
     }
 
@@ -41,60 +42,6 @@ class EmployeeManager {
     /**
      * Charge les employés de la base unifiée avec pagination
      */
-    async loadUnifiedEmployees(page = 0) {
-        try {
-            APP_STATE.currentPage = page;
-            const offset = page * CONFIG.PAGE_SIZE;
-            
-            // Préparer les paramètres API avec le filtre de statut (NOUVEAU - Soft Delete)
-            const params = { 
-                limit: CONFIG.PAGE_SIZE,
-                offset: offset
-            };
-            
-            // Ajouter le filtre statut si ce n'est pas "all"
-            if (this.currentStatutFilter !== 'all') {
-                params.statut = this.currentStatutFilter;
-            }
-            
-            const response = await api.getUnifiedEmployees(params);
-            
-            const container = document.getElementById('unified-employees-list');
-            
-            if (response.success && response.data.length > 0) {
-                const total = response.count || 0;
-                
-                // Afficher les filtres de statut (NOUVEAU - Soft Delete)
-                let html = ui.createStatutFilters(this.currentStatutFilter);
-                
-                html += `<div style="margin: 15px 0; color: var(--text-secondary); text-align: center;">`;
-                html += `<strong>${response.data.length}</strong> employé(s) affiché(s) sur <strong>${total}</strong> total`;
-                html += `</div>`;
-                
-                html += ui.createEmployeeTable(response.data, { 
-                    showSource: true,
-                    showStatut: true  // Afficher la colonne statut (NOUVEAU - Soft Delete)
-                });
-                
-                // Ajouter la pagination
-                html += this.createUnifiedPagination(page, total, CONFIG.PAGE_SIZE);
-                
-                container.innerHTML = html;
-            } else {
-                container.innerHTML = ui.createMessage(
-                    'warning',
-                    'Aucun employé dans la base unifiée. Cliquez sur "Lancer ETL" pour synchroniser les données.',
-                    'fa-exclamation-triangle'
-                );
-            }
-        } catch (error) {
-            document.getElementById('unified-employees-list').innerHTML = ui.createMessage(
-                'error',
-                'Erreur de chargement'
-            );
-        }
-    }
-
     /**
      * Crée la pagination pour la base unifiée
      */
@@ -124,6 +71,7 @@ class EmployeeManager {
             const response = await api.getSourcesStats();
             
             if (response.success) {
+                ui.updateElement('src-count-total', response.data.total_sources || 0);
                 ui.updateElement('src-count-csv', response.data.csv || 0);
                 ui.updateElement('src-count-mysql', response.data.mysql || 0);
                 ui.updateElement('src-count-postgresql', response.data.postgresql || 0);
@@ -164,7 +112,7 @@ class EmployeeManager {
             let filteredEmployees = this.dashboardEmployees;
             if (this.currentStatutFilter !== 'all') {
                 filteredEmployees = this.dashboardEmployees.filter(emp => 
-                    (emp.statut || 'actif') === this.currentStatutFilter
+                    (emp.statut || 'actif').toLowerCase() === this.currentStatutFilter.toLowerCase()
                 );
             }
             
@@ -176,8 +124,8 @@ class EmployeeManager {
                 const endIndex = startIndex + CONFIG.PAGE_SIZE;
                 const pageData = filteredEmployees.slice(startIndex, endIndex);
                 
-                // Afficher les filtres de statut (NOUVEAU - Soft Delete)
-                let html = ui.createStatutFilters(this.currentStatutFilter);
+                // Afficher les filtres de statut pour TABLEAU DE BORD
+                let html = ui.createStatutFilters(this.currentStatutFilter, 'filterUnifiedByStatus');
                 
                 html += `<div style="margin: 15px 0; color: var(--text-secondary); text-align: center;">`;
                 html += `<strong>${pageData.length}</strong> employé(s) affiché(s) sur <strong>${total}</strong> total`;
@@ -194,7 +142,7 @@ class EmployeeManager {
                 container.innerHTML = html;
             } else {
                 // Afficher les filtres même s'il n'y a pas de données
-                let html = ui.createStatutFilters(this.currentStatutFilter);
+                let html = ui.createStatutFilters(this.currentStatutFilter, 'filterUnifiedByStatus');
                 
                 html += ui.createMessage(
                     'warning',
@@ -254,22 +202,32 @@ class EmployeeManager {
                 }
             }
             
-            // Calculer la pagination
-            const totalPages = Math.ceil(this.unifiedDataTotal / this.unifiedDataPageSize);
-            this.unifiedDataPage = Math.max(1, Math.min(page, totalPages));
+            // Filtrer par statut
+            let filteredEmployees = this.unifiedDataEmployees;
+            if (this.unifiedDataStatusFilter && this.unifiedDataStatusFilter !== 'all') {
+                filteredEmployees = this.unifiedDataEmployees.filter(emp => 
+                    (emp.statut || 'actif').toLowerCase() === this.unifiedDataStatusFilter.toLowerCase()
+                );
+            }
+            
+            // Calculer la pagination sur les données filtrées
+            const totalFiltered = filteredEmployees.length;
+            const totalPages = Math.ceil(totalFiltered / this.unifiedDataPageSize);
+            this.unifiedDataPage = Math.max(1, Math.min(page, totalPages || 1));
             
             // Extraire la page courante
             const startIndex = (this.unifiedDataPage - 1) * this.unifiedDataPageSize;
             const endIndex = startIndex + this.unifiedDataPageSize;
-            const pageData = this.unifiedDataEmployees.slice(startIndex, endIndex);
+            const pageData = filteredEmployees.slice(startIndex, endIndex);
             
             if (pageData.length > 0) {
                 let html = `<div style="margin-bottom: 15px; color: var(--text-secondary); text-align: center;">`;
-                html += `Affichage de <strong>${startIndex + 1}</strong> à <strong>${Math.min(endIndex, this.unifiedDataTotal)}</strong> sur <strong>${this.unifiedDataTotal}</strong> employés`;
+                html += `<strong>${pageData.length}</strong> employé(s) affiché(s) sur <strong>${totalFiltered}</strong> total`;
                 html += `</div>`;
                 
                 html += ui.createEmployeeTable(pageData, { 
-                    showSource: true 
+                    showSource: true,
+                    showStatut: true  // Afficher la colonne Statut
                 });
                 
                 container.innerHTML = html;
@@ -297,7 +255,7 @@ class EmployeeManager {
             } else {
                 container.innerHTML = ui.createMessage(
                     'warning',
-                    'Aucun employé dans la base unifiée. Cliquez sur "Lancer ETL" pour synchroniser les données.',
+                    `Aucun employé ${this.currentStatutFilter !== 'all' ? this.currentStatutFilter : ''} dans la base unifiée.`,
                     'fa-exclamation-triangle'
                 );
                 if (paginationControls) paginationControls.style.display = 'none';
@@ -615,6 +573,29 @@ class EmployeeManager {
     }
 
     /**
+     * Filtre les employés de l'onglet Base unifiée par statut
+     */
+    filterUnifiedDataByStatus(statut) {
+        console.log('[EmployeeManager] Filtre statut Base unifiée:', statut);
+        this.unifiedDataStatusFilter = statut;
+        
+        // Mettre à jour l'état des boutons de filtre
+        document.querySelectorAll('.status-filter-btn').forEach(btn => {
+            const btnFilter = btn.getAttribute('data-filter');
+            if (btnFilter === statut) {
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-primary', 'active');
+            } else {
+                btn.classList.remove('btn-primary', 'active');
+                btn.classList.add('btn-secondary');
+            }
+        });
+        
+        // Recharger les données de la page 1 avec le nouveau filtre
+        this.loadUnifiedData(1);
+    }
+
+    /**
      * Supprime un employé
      */
     async deleteEmployee(source, id, nom) {
@@ -726,6 +707,37 @@ function loadUnifiedData() {
  */
 function changeUnifiedPage(action) {
     employeeManager.changeUnifiedPage(action);
+}
+
+/**
+ * Filtre les employés de la base unifiée par statut (Tableau de bord)
+ * @param {string} statut - 'all', 'actif', 'inactif'
+ */
+function filterUnifiedByStatus(statut) {
+    // Pour le Tableau de bord
+    employeeManager.currentStatutFilter = statut;
+    
+    // Mettre à jour les boutons actifs
+    document.querySelectorAll('.status-filter-btn').forEach(btn => {
+        btn.classList.remove('btn-primary', 'active');
+        btn.classList.add('btn-secondary');
+        
+        if (btn.dataset.filter === statut) {
+            btn.classList.remove('btn-secondary');
+            btn.classList.add('btn-primary', 'active');
+        }
+    });
+    
+    // Recharger les données depuis la page 0
+    employeeManager.loadUnifiedEmployees(0);
+}
+
+/**
+ * Filtre les employés de Base unifiée par statut (Onglet Base unifiée)
+ * @param {string} statut - 'all', 'actif' ou 'inactif'
+ */
+function filterByStatus(statut) {
+    employeeManager.filterUnifiedDataByStatus(statut);
 }
 
 /**

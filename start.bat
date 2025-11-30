@@ -29,10 +29,10 @@ echo   • Configuration 100%% automatisée - Zéro intervention manuelle
 echo.
 echo  Données de test :
 echo  ──────────────────────────────────────────────────────────────────────
-echo   • 38 employés répartis sur 3 sources
-echo   • CSV : 23 employés
-echo   • MySQL : 8 employés
-echo   • PostgreSQL : 7 employés
+echo   • 200 employés répartis sur 3 sources
+echo   • CSV        : 80 employés
+echo   • MySQL      : 50 employés
+echo   • PostgreSQL : 70 employés
 echo.
 echo  Technologies utilisées :
 echo  ──────────────────────────────────────────────────────────────────────
@@ -91,8 +91,8 @@ echo  [ETAPE 3/7] Démarrage de tous les services...
 echo  ──────────────────────────────────────────────────────────────────────
 echo  Services à démarrer :
 echo     • Application Flask (API REST + Interface Web)
-echo     • PostgreSQL Source (7 employés)
-echo     • MySQL Source (8 employés)
+echo     • PostgreSQL Source (base source)
+echo     • MySQL Source (base source)
 echo     • PostgreSQL Target (base unifiée)
 echo     • Apache Airflow (webserver + scheduler)
 echo     • Prometheus (collecte de métriques)
@@ -244,11 +244,11 @@ echo  ════════════════════════�
 echo   DONNÉES DE TEST DISPONIBLES
 echo  ═════════════════════════════════════════════════════════════════════════
 echo.
-echo   • CSV            : 23 employés
-echo   • MySQL Source   : 8 employés
-echo   • PostgreSQL Src : 7 employés
+echo   • CSV            : 80 employés
+echo   • MySQL Source   : 50 employés
+echo   • PostgreSQL Src : 70 employés
 echo   ───────────────────────────────────────
-echo   TOTAL            : 38 employés à synchroniser
+echo   TOTAL            : 200 employés à synchroniser
 echo.
 echo  ═════════════════════════════════════════════════════════════════════════
 echo   PROCHAINES ÉTAPES

@@ -68,165 +68,65 @@ class UIManager {
      * Crée un badge de source
      */
     createSourceBadge(source) {
-        const sourceClass = `source-${(source || 'unknown').toLowerCase()}`;
-        return `<span class="source-badge ${sourceClass}">${source || 'N/A'}</span>`;
-    }
-
-    /**
-     * Crée un badge de statut (NOUVEAU - Soft Delete)
-     */
-    createStatutBadge(statut) {
-        if (!statut || statut === 'actif') {
-            return `<span class="statut-badge statut-actif"><i class="fas fa-check-circle"></i> Actif</span>`;
-        } else {
-            return `<span class="statut-badge statut-inactif"><i class="fas fa-times-circle"></i> Inactif</span>`;
-        }
+        const sourceClass = `source-${source.toLowerCase()}`;
+        return `<span class="source-badge ${sourceClass}">${source}</span>`;
     }
 
     /**
      * Formate un montant en FCFA
      */
     formatSalary(salary) {
-        if (!salary && salary !== 0) return '-';
-        return Math.round(salary).toLocaleString('fr-FR') + ' FCFA';
+        return salary ? Math.round(salary).toLocaleString() + ' FCFA' : '-';
     }
 
     /**
-     * Formate une date d'embauche en français (JJ/MM/AAAA)
+     * Formate une date
      */
-    formatDateEmbauche(dateString) {
-        if (!dateString || dateString === 'null' || dateString === 'undefined' || dateString === 'None') {
-            return '-';
-        }
-        
-        try {
-            // Extraire seulement la partie date si c'est un datetime
-            const datePart = String(dateString).split('T')[0];
-            const parts = datePart.split('-');
-            
-            if (parts.length === 3) {
-                const year = parts[0];
-                const month = parts[1];
-                const day = parts[2];
-                
-                // Vérifier que c'est une date valide
-                if (year && month && day && year.length === 4) {
-                    return `${day}/${month}/${year}`;
-                }
-            }
-            
-            // Essayer de parser comme date
-            const date = new Date(dateString);
-            if (!isNaN(date.getTime())) {
-                const day = String(date.getDate()).padStart(2, '0');
-                const month = String(date.getMonth() + 1).padStart(2, '0');
-                const year = date.getFullYear();
-                return `${day}/${month}/${year}`;
-            }
-            
-            return dateString || '-';
-        } catch (e) {
-            console.warn('[UI] Erreur formatage date embauche:', dateString, e);
-            return '-';
-        }
-    }
-
-    /**
-     * Formate une date de mise à jour (datetime complet) en français
-     */
-    formatDateMAJ(dateString) {
-        if (!dateString || dateString === 'null' || dateString === 'undefined' || dateString === 'None') {
-            return '-';
-        }
-        
-        try {
-            const date = new Date(dateString);
-            
-            // Vérifier si la date est valide
-            if (isNaN(date.getTime())) {
-                return '-';
-            }
-            
-            // Formater en français
-            const day = String(date.getDate()).padStart(2, '0');
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const year = date.getFullYear();
-            const hours = String(date.getHours()).padStart(2, '0');
-            const minutes = String(date.getMinutes()).padStart(2, '0');
-            const seconds = String(date.getSeconds()).padStart(2, '0');
-            
-            return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
-        } catch (e) {
-            console.warn('[UI] Erreur formatage date MAJ:', dateString, e);
-            return '-';
-        }
-    }
-
-    /**
-     * Échappe une chaîne pour utilisation dans un attribut HTML
-     */
-    escapeHtml(str) {
-        if (!str) return '';
-        return String(str)
-            .replace(/&/g, '&amp;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
-    }
-
-    /**
-     * Encode une chaîne pour utilisation dans onclick
-     */
-    encodeForOnclick(str) {
-        if (!str) return '';
-        return encodeURIComponent(String(str));
+    formatDate(dateString) {
+        if (!dateString) return '-';
+        return new Date(dateString).toLocaleString('fr-FR');
     }
 
     /**
      * Crée une ligne de tableau pour un employé
      */
     createEmployeeRow(emp, options = {}) {
-        const { showId = false, showSource = false, showActions = false, sourceType = null, showStatut = false } = options;
+        const { showId = false, showSource = false, showStatut = false, showActions = false, sourceType = null } = options;
         
-        // Classe CSS pour les lignes inactives
-        const rowClass = (emp.statut === 'inactif') ? 'class="row-inactive"' : '';
-        
-        let row = `<tr ${rowClass}>`;
+        let row = '<tr>';
         
         if (showId) {
-            row += `<td>${emp.id || '-'}</td>`;
+            row += `<td>${emp.id}</td>`;
         }
         
         row += `
-            <td><strong>${this.escapeHtml(emp.nom)}</strong></td>
-            <td>${this.escapeHtml(emp.email)}</td>
-            <td>${this.escapeHtml(emp.departement) || '-'}</td>
+            <td><strong>${emp.nom}</strong></td>
+            <td>${emp.email}</td>
+            <td>${emp.departement || '-'}</td>
             <td>${this.formatSalary(emp.salaire)}</td>
-            <td>${this.formatDateEmbauche(emp.date_embauche)}</td>
+            <td style="font-size: 0.9em;">${emp.date_embauche ? new Date(emp.date_embauche).toLocaleDateString('fr-FR') : '-'}</td>
         `;
         
         if (showSource) {
             row += `<td>${this.createSourceBadge(emp.source)}</td>`;
-            row += `<td style="font-size: 0.9em; color: var(--text-secondary);">${this.formatDateMAJ(emp.updated_at)}</td>`;
+            row += `<td style="font-size: 0.9em; color: #6b7280;">${this.formatDate(emp.updated_at)}</td>`;
         }
         
-        // Colonne statut (NOUVEAU - Soft Delete)
         if (showStatut) {
-            row += `<td>${this.createStatutBadge(emp.statut)}</td>`;
+            const statut = emp.statut || 'actif';
+            const statutClass = statut.toLowerCase() === 'actif' ? 'success' : 'danger';
+            const statutIcon = statut.toLowerCase() === 'actif' ? 'check-circle' : 'times-circle';
+            row += `<td><span class="source-badge source-badge-${statutClass}"><i class="fas fa-${statutIcon}"></i> ${statut.charAt(0).toUpperCase() + statut.slice(1)}</span></td>`;
         }
         
         if (showActions && sourceType) {
-            // Utiliser l'ID de l'employé pour éviter les problèmes d'échappement
-            const escapedNom = this.encodeForOnclick(emp.nom);
-            
             row += `
                 <td>
                     <div class="action-btns">
-                        <button class="btn btn-sm btn-primary" onclick="editSourceEmployee('${sourceType}', ${emp.id})" title="Modifier cet employé">
+                        <button class="btn btn-sm btn-primary" onclick='employeeManager.editEmployee("${sourceType}", ${JSON.stringify(emp)})'>
                             <i class="fas fa-edit"></i> Modifier
                         </button>
-                        <button class="btn btn-sm btn-danger" onclick="deleteSourceEmployee('${sourceType}', ${emp.id}, '${escapedNom}')" title="Supprimer cet employé">
+                        <button class="btn btn-sm btn-danger" onclick='employeeManager.deleteEmployee("${sourceType}", ${emp.id}, "${emp.nom}")'>
                             <i class="fas fa-trash"></i> Supprimer
                         </button>
                     </div>
@@ -242,11 +142,7 @@ class UIManager {
      * Crée un tableau d'employés
      */
     createEmployeeTable(employees, options = {}) {
-        const { showId = false, showSource = false, showActions = false, sourceType = null, showStatut = false } = options;
-        
-        if (!employees || employees.length === 0) {
-            return this.createMessage('info', 'Aucun employé à afficher');
-        }
+        const { showId = false, showSource = false, showStatut = false, showActions = false, sourceType = null } = options;
         
         let html = '<div class="table-container"><table><thead><tr>';
         
@@ -258,7 +154,7 @@ class UIManager {
         html += '</tr></thead><tbody>';
         
         employees.forEach(emp => {
-            html += this.createEmployeeRow(emp, { showId, showSource, showActions, sourceType, showStatut });
+            html += this.createEmployeeRow(emp, { showId, showSource, showStatut, showActions, sourceType });
         });
         
         html += '</tbody></table></div>';
@@ -276,30 +172,11 @@ class UIManager {
         return `
             <div class="pagination">
                 <button onclick="changePage(-1)" ${currentPage === 0 ? 'disabled' : ''}>
-                    <i class="fas fa-angle-left"></i> Précédent
+                    ◀ Précédent
                 </button>
-                <button class="active" disabled>Page ${currentPage + 1} / ${totalPages}</button>
+                <button class="active">${currentPage + 1} / ${totalPages}</button>
                 <button onclick="changePage(1)" ${currentPage >= totalPages - 1 ? 'disabled' : ''}>
-                    Suivant <i class="fas fa-angle-right"></i>
-                </button>
-            </div>
-        `;
-    }
-
-    /**
-     * Crée les filtres de statut (NOUVEAU - Soft Delete)
-     */
-    createStatutFilters(currentFilter = 'all') {
-        return `
-            <div class="statut-filters">
-                <button class="filter-btn ${currentFilter === 'all' ? 'active' : ''}" onclick="filterByStatut('all')">
-                    <i class="fas fa-list"></i> Tous
-                </button>
-                <button class="filter-btn ${currentFilter === 'actif' ? 'active' : ''}" onclick="filterByStatut('actif')">
-                    <i class="fas fa-check-circle"></i> Actifs
-                </button>
-                <button class="filter-btn ${currentFilter === 'inactif' ? 'active' : ''}" onclick="filterByStatut('inactif')">
-                    <i class="fas fa-times-circle"></i> Inactifs
+                    Suivant ▶
                 </button>
             </div>
         `;
@@ -309,8 +186,6 @@ class UIManager {
      * Active/désactive un bouton avec spinner
      */
     setButtonLoading(button, loading, originalText = null, loadingText = 'Chargement...') {
-        if (!button) return;
-        
         if (loading) {
             button.dataset.originalText = button.innerHTML;
             button.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${loadingText}`;
@@ -329,15 +204,32 @@ class UIManager {
         if (modal) {
             if (show) {
                 modal.classList.add('active');
-                // Focus sur le premier input
-                setTimeout(() => {
-                    const firstInput = modal.querySelector('input:not([type="hidden"])');
-                    if (firstInput) firstInput.focus();
-                }, 100);
             } else {
                 modal.classList.remove('active');
             }
         }
+    }
+
+    /**
+     * Crée les boutons de filtre par statut
+     */
+    createStatutFilters(currentFilter = 'all', callbackName = 'filterByStatus') {
+        return `
+            <div style="display: flex; justify-content: center; gap: 10px; margin: 20px 0;">
+                <button class="btn ${currentFilter === 'all' ? 'btn-primary' : 'btn-secondary'} status-filter-btn" 
+                        onclick="${callbackName}('all')" data-filter="all">
+                    <i class="fas fa-list"></i> Tous
+                </button>
+                <button class="btn ${currentFilter === 'actif' ? 'btn-primary' : 'btn-secondary'} status-filter-btn" 
+                        onclick="${callbackName}('actif')" data-filter="actif">
+                    <i class="fas fa-check-circle"></i> Actifs
+                </button>
+                <button class="btn ${currentFilter === 'inactif' ? 'btn-primary' : 'btn-secondary'} status-filter-btn" 
+                        onclick="${callbackName}('inactif')" data-filter="inactif">
+                    <i class="fas fa-times-circle"></i> Inactifs
+                </button>
+            </div>
+        `;
     }
 }
 
