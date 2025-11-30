@@ -297,7 +297,6 @@ Quand on supprime un employé (physiquement) dans la base de données source (my
 au lieu de le supprimer physiquement les enregistrements de la base unifiée, nous **changeons simplement le statut** de l'employé de `'actif'` à `'inactif'` :
 - Préservation complète de l'historique
 - Traçabilité totale (audit trail)
-- Possibilité de réactivation
 - Rapports historiques complets
 
 
@@ -603,36 +602,6 @@ curl "http://localhost:5000/api/employes?statut=inactif"
 curl "http://localhost:5000/api/employes"
 
 # Compter : devrait retourner 201 employés (200 + 1)
-```
-
-### Test 4 : Réactivation d'un employé
-
-**Durée : 2 minutes**
-
-```bash
-# Réactiver "Abdoulaye Ouedraogo" via API
-curl -X PUT http://localhost:5000/api/sources/mysql/employes/1 \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nom": "Abdoulaye Ouedraogo",
-    "email": "abdoulaye@example.com",
-    "departement": "Informatique",
-    "salaire": 850000,
-    "date_embauche": "2023-01-15",
-    "statut": "actif"
-  }'
-
-# Message : "Employé mis à jour avec succès"
-
-# Synchroniser
-curl -X POST http://localhost:5000/api/etl/trigger
-
-# Attendre 15 secondes
-
-# Vérifier
-curl "http://localhost:5000/api/employes?statut=actif" | jq '.data[] | select(.email == "abdoulaye@example.com")'
-
-# Résultat : Abdoulaye Ouedraogo apparaît avec statut = 'actif' ✅
 ```
 
 ---
