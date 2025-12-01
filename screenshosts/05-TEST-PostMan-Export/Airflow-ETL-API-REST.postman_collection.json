@@ -1,0 +1,411 @@
+{
+	"info": {
+		"_postman_id": "08d809ca-71f0-4a30-ab6c-714a70770634",
+		"name": "Airflow-ETL-API-REST",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "50025808",
+		"_collection_link": "https://itschool36-4038956.postman.co/workspace/ITSchool's-Workspace~03a4857c-7689-489d-8278-ec961d903d6e/collection/50025808-08d809ca-71f0-4a30-ab6c-714a70770634?action=share&source=collection_link&creator=50025808"
+	},
+	"item": [
+		{
+			"name": "TOUS EMPLOYES",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/employes",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"employes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DETAILS EMPLOYE",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}\t/api/employes/10",
+					"host": [
+						"{{Airflow-ETL}}\t"
+					],
+					"path": [
+						"api",
+						"employes",
+						"10"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "REPARTITION PAR SOURCE",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/stats/sources",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"stats",
+						"sources"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "STATS BD UNIFIEE",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/stats",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"stats"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "EMPLOYES ACTIFS",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/employes?statut=actif&limit=50",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"employes"
+					],
+					"query": [
+						{
+							"key": "statut",
+							"value": "actif"
+						},
+						{
+							"key": "limit",
+							"value": "50"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "STATS SOURCES",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/sources/stats",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"sources",
+						"stats"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "EMPLOYES INACTIFS",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/employes?statut=INACTIf&limit=50",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"employes"
+					],
+					"query": [
+						{
+							"key": "statut",
+							"value": "INACTIf"
+						},
+						{
+							"key": "limit",
+							"value": "50"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "EMPLOYES MYSQL",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/sources/mysql/employes",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"sources",
+						"mysql",
+						"employes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "EMPLOYE MYSQL",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/sources/mysql/employes/8",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"sources",
+						"mysql",
+						"employes",
+						"8"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "AJOUT MYSQL",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"nom\": \"Abdoulaye Ouedraogo\",\r\n  \"email\": \"abdoulaye@entrepris22e.bf\",\r\n  \"departement\": \"Informatique\",\r\n  \"salaire\": 850000,\r\n  \"date_embauche\": \"2024-03-15\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/sources/mysql/employes",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"sources",
+						"mysql",
+						"employes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DELETE MYSQL",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/sources/mysql/employes/5",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"sources",
+						"mysql",
+						"employes",
+						"5"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "EMPLOYES POSTGRESQL",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/sources/postgresql/employes",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"sources",
+						"postgresql",
+						"employes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "EMPLOYE POSTGRESQL",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/sources/postgresql/employes",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"sources",
+						"postgresql",
+						"employes"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "EMPLOYES CSV",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/employes?source=csv",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"employes"
+					],
+					"query": [
+						{
+							"key": "source",
+							"value": "csv"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DECLENCHER ETL",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/etl/trigger",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"etl",
+						"trigger"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ETAT DU DAG",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/etl/status",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"etl",
+						"status"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "HITORIQUE ETL",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/etl/history",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"etl",
+						"history"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "LAST SYNCHRO",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{Airflow-ETL}}/api/etl/last-sync",
+					"host": [
+						"{{Airflow-ETL}}"
+					],
+					"path": [
+						"api",
+						"etl",
+						"last-sync"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "Airflow-ETL",
+			"value": "",
+			"type": "default"
+		}
+	]
+}
