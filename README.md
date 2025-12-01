@@ -829,7 +829,9 @@ docker-compose logs --tail=50 -f
 docker logs --timestamps <nom-conteneur> --tail 100
 ```
 
-### Tester l'API REST
+### Tester l'API REST 
+
+NB : POSTMAN peut etre utilisé aussi pour les tests.
 
 ```bash
 # Statistiques globales
