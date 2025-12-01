@@ -31,7 +31,7 @@ class SourceDatabaseService:
     
     # ========== MYSQL ==========
     
-    def get_mysql_employees(self, limit=100, offset=0):
+    def get_mysql_employees(self, limit=200, offset=0):
         """Récupère les employés de MySQL source"""
         conn = None
         try:
@@ -209,7 +209,7 @@ class SourceDatabaseService:
     
     # ========== POSTGRESQL ==========
     
-    def get_postgresql_employees(self, limit=100, offset=0):
+    def get_postgresql_employees(self, limit=200, offset=0):
         """Récupère les employés de PostgreSQL source"""
         conn = None
         try:
@@ -421,7 +421,7 @@ class SourceDatabaseService:
             print(f"Erreur lors du comptage CSV : {str(e)}")
             return 0
     
-    def get_csv_employees(self, limit=100, offset=0):
+    def get_csv_employees(self, limit=200, offset=0):
         """Récupère les employés depuis le fichier CSV"""
         import csv
         

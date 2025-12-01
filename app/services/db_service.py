@@ -39,7 +39,7 @@ class DatabaseService:
             if conn:
                 conn.close()
     
-    def get_all_employes(self, source=None, departement=None, limit=100, offset=0):
+    def get_all_employes(self, source=None, departement=None, statut=None, limit=200, offset=0):
         """Récupère tous les employés avec filtres optionnels"""
         query = "SELECT * FROM employes_unified WHERE 1=1"
         params = []
@@ -51,7 +51,12 @@ class DatabaseService:
         if departement:
             query += " AND departement = %s"
             params.append(departement)
-        
+
+        if statut:
+            #query += " AND statut = %s"
+            query += " AND statut ILIKE %s"
+            params.append(statut)
+
         query += " ORDER BY id LIMIT %s OFFSET %s"
         params.extend([limit, offset])
         

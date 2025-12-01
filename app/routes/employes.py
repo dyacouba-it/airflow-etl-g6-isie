@@ -12,10 +12,23 @@ def get_employes():
     try:
         source = request.args.get('source')
         departement = request.args.get('departement')
-        limit = int(request.args.get('limit', 100))
+
+        statut = request.args.get('statut')
+        # Validation du statut (insensible à la casse)
+        if statut:
+            statut = statut.lower()
+            statuts_valides = ['actif', 'inactif']
+            if statut not in statuts_valides:
+                return jsonify({
+                    'success': False,
+                    'message': f"Valeur du paramètre 'Statut' invalide : {statut}. Voici les valeurs autorisées : {statuts_valides}"
+                }), 400
+            
+        limit = int(request.args.get('limit', 200))
         offset = int(request.args.get('offset', 0))
         
-        employes = db_service.get_all_employes(source, departement, limit, offset)
+        
+        employes = db_service.get_all_employes(source, departement, statut, limit, offset)
         
         return jsonify({
             'success': True,

@@ -11,7 +11,7 @@ source_service = SourceDatabaseService()
 def get_mysql_employes():
     """Liste des employés MySQL source"""
     try:
-        limit = int(request.args.get('limit', 100))
+        limit = int(request.args.get('limit', 200))
         offset = int(request.args.get('offset', 0))
         
         employes = source_service.get_mysql_employees(limit, offset)
@@ -148,7 +148,7 @@ def delete_mysql_employe(employe_id):
 def get_postgresql_employes():
     """Liste des employés PostgreSQL source"""
     try:
-        limit = int(request.args.get('limit', 100))
+        limit = int(request.args.get('limit', 200))
         offset = int(request.args.get('offset', 0))
         
         employes = source_service.get_postgresql_employees(limit, offset)
